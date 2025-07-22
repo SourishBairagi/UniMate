@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Toggle } from '@/components/ui/toggle';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select'; // Assume a custom component for multi-tag input
+import { Calendar } from '@/components/ui/calendar'; // Optional time picker/calendar component
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+export default function ProfileSetup() {
+  const [step, setStep] = useState(1);
+
+  const totalSteps = 5;
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, totalSteps));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <Progress value={(step / totalSteps) * 100} className="mb-6" />
+
+      <Card className="shadow-xl p-4 transition-all duration-300">
+        <CardContent>
+          {step === 1 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">📌 Basic Academic Info</h2>
+              <Input placeholder="University Name" className="mb-3" />
+              <Select>
+                <SelectTrigger className="mb-3">
+                  <SelectValue placeholder="Select Department/Major" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cse">CSE</SelectItem>
+                  <SelectItem value="eee">EEE</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger className="mb-3">
+                  <SelectValue placeholder="Year of Study" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1st</SelectItem>
+                  <SelectItem value="2">2nd</SelectItem>
+                  <SelectItem value="3">3rd</SelectItem>
+                  <SelectItem value="4">4th</SelectItem>
+                  <SelectItem value="m">Masters</SelectItem>
+                </SelectContent>
+              </Select>
+              <MultiSelect placeholder="Courses/Subjects Currently Enrolled" className="mb-3" />
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Preferred Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="bn">Bangla</SelectItem>
+                  <SelectItem value="bi">Bilingual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">🎯 Interest & Study Preferences</h2>
+              <MultiSelect placeholder="Preferred Study Topics/Subjects" className="mb-3" />
+              <MultiSelect placeholder="Study Style (Solo, Group Study, etc.)" className="mb-3" />
+              <div className="flex items-center mb-3">
+                <span className="mr-3">Exam Prep Focused?</span>
+                <Switch />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">🤝 Collaboration & Networking</h2>
+              <MultiSelect placeholder="Looking for (Study Partner, Note Exchange, etc.)" className="mb-3" />
+              <Input placeholder="Skills You Can Share (e.g., Math tutoring)" className="mb-3" />
+              <Input placeholder="Skills You Want to Learn (optional)" className="mb-3" />
+            </div>
+          )}
+
+          {step === 4 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">🕓 Availability (Optional)</h2>
+              <Calendar className="mb-3" />
+              <RadioGroup defaultValue="chat" className="mb-3">
+                <h3 className="mb-2">Preferred Communication</h3>
+                <div className="flex gap-4">
+                  <RadioGroupItem value="chat" /> Chat only
+                  <RadioGroupItem value="video" /> Video calls
+                  <RadioGroupItem value="inperson" /> In-person
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">🎨 Personalization (Optional)</h2>
+              <MultiSelect placeholder="Topics of Interest (Tech, Business, etc.)" className="mb-3" />
+              <MultiSelect placeholder="Club/Activity Involvement" className="mb-3" />
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-between">
+            {step > 1 ? <Button onClick={prevStep} variant="outline">Back</Button> : <div />}
+            {step < totalSteps ? (
+              <Button onClick={nextStep}>Save & Continue</Button>
+            ) : (
+              <div className="flex gap-3">
+                <Button variant="outline">Edit Later</Button>
+                <Button>Finish Setup</Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
