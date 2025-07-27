@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoWaste Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafb;
+            color: #2c3e50;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 28px;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+            margin-left: auto;
+        }
+
+        .collapse-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            gap: 15px;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-right: 4px solid #fff;
+        }
+
+        .menu-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .menu-item span {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo span {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: background 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f8f9fa;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info h4 {
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .card-icon.pickups { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .card-icon.waste { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .card-icon.users { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .card-icon.rewards { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .card-trend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        /* Analytics Section */
+        .analytics-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .chart-filter {
+            padding: 8px 15px;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            background: white;
+            color: #555;
+            font-size: 13px;
+        }
+
+        /* Recent Activity Table */
+        .recent-activity {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #f1f3f4;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f8f9fa;
+            color: #555;
+        }
+
+        .activity-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-assigned { background: #cce5ff; color: #004085; }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-assign {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-assign:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-view {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #7f8c8d;
+            transform: translateY(-1px);
+        }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .top-nav,
+        body.dark-mode .summary-card,
+        body.dark-mode .chart-container,
+        body.dark-mode .recent-activity {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .nav-title,
+        body.dark-mode .chart-title,
+        body.dark-mode .card-value {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .activity-table th,
+        body.dark-mode .activity-table td {
+            color: #b0b0b0;
+            border-color: #404040;
+        }
+
+        body.dark-mode .activity-table tr:hover {
+            background: #404040;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .analytics-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+            .top-nav {
+                padding: 15px 20px;
+            }
+
+            .nav-title {
+                font-size: 22px;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .analytics-section {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .chart-container {
+                height: 300px;
+                padding: 20px;
+            }
+
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .summary-card {
+                padding: 20px;
+            }
+
+            .card-value {
+                font-size: 24px;
+            }
+
+            .dashboard-content {
+                padding: 15px;
+            }
+
+            .recent-activity {
+                padding: 15px;
+                overflow-x: auto;
+            }
+
+            .activity-table {
+                min-width: 600px;
+            }
+
+            .activity-table th,
+            .activity-table td {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                background: none;
+                border: none;
+                color: #2c3e50;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 5px;
+                border-radius: 5px;
+                margin-right: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .top-nav {
+                padding: 10px 15px;
+            }
+
+            .nav-title {
+                font-size: 18px;
+            }
+
+            .chart-container {
+                height: 250px;
+                padding: 15px;
+            }
+
+            .chart-title {
+                font-size: 16px;
+            }
+
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+            }
+
+            .dark-mode-toggle {
+                width: 45px;
+                height: 45px;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>EcoWaste</span>
+                </div>
+                <button class="collapse-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Pickup Requests</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-recycle"></i>
+                    <span>Waste Analysis</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-coins"></i>
+                    <span>Reward System</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-handshake"></i>
+                    <span>Partners</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="/user.html" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>User</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Top Navigation -->
+            <div class="top-nav">
+                <div style="display: flex; align-items: center;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="nav-title">Dashboard Overview</h1>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">AM</div>
+                    <div class="user-info">
+                        <h4>Admin Manager</h4>
+                        <p>Super Admin</p>
+                    </div>
+                    <i class="fas fa-chevron-down" style="margin-left: 10px; color: #7f8c8d;"></i>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="card-header">
+                            <div class="card-title">Total Pickups Today</div>
+                            <div class="card-icon pickups">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">42</div>
+                        <div class="card-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12% from yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="card-header">
+                            <div class="card-title">Waste Collected</div>
+                            <div class="card-icon waste">
+                                <i class="fas fa-weight-hanging"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">120kg</div>
+                        <div class="card-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8% this week</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="card-header">
+                            <div class="card-title">Active Users</div>
+                            <div class="card-icon users">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">1,240</div>
+                        <div class="card-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+15% this month</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="card-header">
+                            <div class="card-title">Rewards Redeemed</div>
+                            <div class="card-icon rewards">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">৳8,500</div>
+                        <div class="card-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+22% this month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="analytics-section">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Waste Collection Trends</h3>
+                            <select class="chart-filter">
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                                <option>Last 3 Months</option>
+                            </select>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Waste Type Distribution</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table -->
+                <div class="recent-activity">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Recent Pickup Requests</h3>
+                        <button class="chart-filter" style="border: none; background: #3498db; color: white; cursor: pointer;">View All</button>
+                    </div>
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Waste Type</th>
+                                <th>Weight</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2 min ago</td>
+                                <td>Rashid Ahmed</td>
+                                <td>Plastic</td>
+                                <td>3.5kg</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td>
+                                    <button class="action-btn btn-assign">Assign</button>
+                                    <button class="action-btn btn-view">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>15 min ago</td>
+                                <td>Fatima Khan</td>
+                                <td>Paper</td>
+                                <td>2.1kg</td>
+                                <td><span class="status-badge status-assigned">Assigned</span></td>
+                                <td>
+                                    <button class="action-btn btn-view">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>32 min ago</td>
+                                <td>Mohammad Islam</td>
+                                <td>E-waste</td>
+                                <td>1.8kg</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                                <td>
+                                    <button class="action-btn btn-view">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1 hour ago</td>
+                                <td>Sabrina Akter</td>
+                                <td>Mixed</td>
+                                <td>4.2kg</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                                <td>
+                                    <button class="action-btn btn-view">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1.5 hours ago</td>
+                                <td>Karim Rahman</td>
+                                <td>Plastic</td>
+                                <td>2.7kg</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td>
+                                    <button class="action-btn btn-assign">Assign</button>
+                                    <button class="action-btn btn-view">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.dark-mode-toggle i');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        // Menu Item Active State
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize Charts
+        window.addEventListener('load', function() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Waste Collected (kg)',
+                        data: [85, 92, 78, 115, 98, 125, 120],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#2ecc71',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#7f8c8d'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#7f8c8d'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Pie Chart
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Plastic', 'Paper', 'E-waste', 'Mixed'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#f39c12',
+                            '#3498db',
+                            '#9b59b6'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                color: '#7f8c8d'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Action Button Handlers
+        document.querySelectorAll('.btn-assign').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Assign collector functionality would be implemented here');
+            });
+        });
+
+        document.querySelectorAll('.btn-view').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('View details functionality would be implemented here');
+            });
+        });
+
+        // Add some interactive animations
+        document.querySelectorAll('.summary-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
